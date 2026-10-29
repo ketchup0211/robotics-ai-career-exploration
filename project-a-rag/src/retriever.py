@@ -4,26 +4,21 @@ import re
 
 
 def tokenize(text: str) -> set[str]:
-    """텍스트를 소문자로 바꾸고 단어 단위로 나눈다."""
     return set(re.findall(r"[a-zA-Z0-9가-힣]+", text.lower()))
 
 
 def load_documents(path: Path) -> list[str]:
-    """마크다운 문서를 ## 제목 기준으로 나눈다."""
     text = path.read_text(encoding="utf-8")
     sections = re.split(r"(?m)^## ", text)
 
-    # 첫 번째 부분은 문서 전체 제목이므로 제외한다.
-    documents = [
+    return [
         section.strip()
         for section in sections[1:]
         if section.strip()
     ]
-    return documents
 
 
 def search(query: str, documents: list[str]) -> list[tuple[int, int, str]]:
-    """질문과 겹치는 단어 수를 세어 관련 문서를 정렬한다."""
     query_tokens = tokenize(query)
     results = []
 
@@ -38,12 +33,19 @@ def search(query: str, documents: list[str]) -> list[tuple[int, int, str]]:
     return results
 
 
+def generate_answer(document: str) -> str:
+    # 현재는 생성형 AI 대신 검색된 문서 내용을 그대로 사용한다.
+    lines = document.splitlines()
+    content = " ".join(line.strip() for line in lines[1:] if line.strip())
+    return content
+
+
 def main() -> None:
     project_root = Path(__file__).resolve().parents[1]
     document_path = project_root / "data" / "sample_docs.md"
     documents = load_documents(document_path)
 
-    print("문서 검색기")
+    print("루미 문서 도우미")
     print("종료하려면 q를 입력하세요.")
 
     while True:
@@ -54,12 +56,15 @@ def main() -> None:
 
         results = search(query, documents)
 
-        if results:
-            index, score, document = results[0]
-            print(f"\n[문서 {index}] 겹치는 단어 수: {score}")
-            print(document)
-        else:
-            print("관련 문서를 찾지 못했습니다.")
+        if not results:
+            print("관련 근거를 찾지 못해 답변할 수 없습니다.")
+            continue
+
+        index, score, document = results[0]
+        answer = generate_answer(document)
+
+        print(f"\n답변: {answer}")
+        print(f"근거: 문서 {index} (키워드 일치 점수: {score})")
 
 
 if __name__ == "__main__":
