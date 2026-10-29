@@ -54,13 +54,12 @@ def main() -> None:
 
         results = search(query, documents)
 
-        if not results:
-            print("일치하는 단어가 있는 문서를 찾지 못했습니다.")
-            continue
-
-        for index, score, document in results:
+        if results:
+            index, score, document = results[0]
             print(f"\n[문서 {index}] 겹치는 단어 수: {score}")
             print(document)
+        else:
+            print("관련 문서를 찾지 못했습니다.")
 
 
 if __name__ == "__main__":
