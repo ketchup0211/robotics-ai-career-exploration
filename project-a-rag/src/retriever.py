@@ -60,11 +60,11 @@ def main() -> None:
             print("관련 근거를 찾지 못해 답변할 수 없습니다.")
             continue
 
-        index, score, document = results[0]
-        answer = generate_answer(document)
+        print("\n검색 결과 상위 3개:")
 
-        print(f"\n답변: {answer}")
-        print(f"근거: 문서 {index} (키워드 일치 점수: {score})")
+        for index, score, document in results[:3]:
+            title = document.splitlines()[0]
+            print(f"- 문서 {index} | 점수 {score} | {title}")
 
 
 if __name__ == "__main__":
