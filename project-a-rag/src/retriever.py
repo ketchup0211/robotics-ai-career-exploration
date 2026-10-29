@@ -3,8 +3,32 @@ from pathlib import Path
 import re
 
 
+
 def tokenize(text: str) -> set[str]:
-    return set(re.findall(r"[a-zA-Z0-9가-힣]+", text.lower()))
+    """한국어 조사와 일부 어미를 제거해 핵심 단어를 추출한다."""
+    words = re.findall(r"[a-zA-Z0-9가-힣]+", text.lower())
+
+    stopwords = {"루미", "어떻게", "어때", "오늘", "서울"}
+    suffixes = (
+        "되면", "한다", "하는", "해서", "하면",
+        "으로", "에서", "에게",
+        "은", "는", "이", "가", "을", "를",
+        "의", "에", "와", "과", "도", "만", "로", "다", "해",
+    )
+
+    tokens = set()
+
+    for word in words:
+        for suffix in suffixes:
+            if len(word) > len(suffix) + 1 and word.endswith(suffix):
+                word = word[:-len(suffix)]
+                break
+
+        if word and word not in stopwords:
+            tokens.add(word)
+
+    return tokens
+
 
 
 def load_documents(path: Path) -> list[str]:
