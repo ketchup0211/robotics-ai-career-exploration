@@ -28,11 +28,13 @@
 
 | Experiment | Question |
 | --- | --- |
-| EXP-01: Baseline retrieval | 기본 검색이 질문과 관련된 문서를 찾는가? |
-| EXP-02: Chunking comparison | 문서 조각의 크기와 겹침이 검색 결과에 영향을 주는가? |
-| EXP-03: Retrieval comparison | 키워드 기반 검색과 의미 기반 검색은 어떤 차이가 있는가? |
-| EXP-04: Grounded answers | 답변이 검색 근거를 벗어나지 않도록 할 수 있는가? |
-| EXP-05: No-answer questions | 근거가 없는 질문을 적절히 거절하는가? |
+| EXP-01: Baseline retrieval | 기본 키워드 검색은 질문과 관련된 문서를 찾는가? |
+| EXP-02: Query wording and retrieval failures | 질문 표현에 따라 검색 결과가 어떻게 달라지는가? |
+| EXP-03: Rule-based Korean normalization | 조사·어미 정규화가 검색 결과를 개선하는가? |
+| EXP-04: Query paraphrase robustness | 의미가 비슷하지만 표현이 다른 질문도 검색할 수 있는가? |
+| EXP-05: Keyword vs. semantic retrieval | 키워드 기반 검색과 의미 기반 검색은 어떤 차이가 있는가? |
+| EXP-06: Grounded answers | 답변이 검색 근거를 벗어나지 않도록 할 수 있는가? |
+| EXP-07: No-answer questions | 근거가 없는 질문을 적절히 거절하는가? |
 
 실험 순서는 구현 난이도와 실제 관찰 결과에 따라 조정할 수 있습니다.
 
@@ -50,4 +52,8 @@
 - [x] Development environment confirmed
 - [x] Minimal document set prepared
 - [x] First retrieval baseline implemented
-- [x] First experiment run and recorded (initial execution check; detailed per-question evaluation remains)
+- [x] EXP-01 baseline retrieval implemented and tested
+- [x] EXP-02 query wording and retrieval failures tested
+- [x] EXP-03 rule-based Korean normalization tested
+- [x] EXP-04 query paraphrase robustness tested
+- [ ] Compare keyword-based retrieval with semantic retrieval
