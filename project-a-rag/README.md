@@ -47,7 +47,7 @@
 ## Current Status
 
 - [x] Project scope and initial evaluation questions defined
-- [ ] Development environment confirmed
-- [ ] Minimal document set prepared
-- [ ] First retrieval baseline implemented
-- [ ] First experiment run and recorded
+- [x] Development environment confirmed
+- [x] Minimal document set prepared
+- [x] First retrieval baseline implemented
+- [x] First experiment run and recorded (initial execution check; detailed per-question evaluation remains)
