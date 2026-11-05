@@ -1,128 +1,139 @@
 
 import cv2
 import numpy as np
-from collections import deque
 
 
 def main():
+    # 1. 카메라 연결
     cap = cv2.VideoCapture(1, cv2.CAP_AVFOUNDATION)
 
     if not cap.isOpened():
         print("카메라를 열 수 없습니다.")
         return
 
-    print("파란색 물체를 카메라에 보여주세요.")
-    print("q 또는 ESC를 누르면 종료됩니다.")
+    # 2. 파란색 HSV 범위
+    lower_blue = np.array([90, 80, 50])
+    upper_blue = np.array([135, 255, 255])
 
-    # 최근 중심점 30개 저장
-    trail = deque(maxlen=30)
+    # 3. 노이즈 제거 및 영역 연결용 커널
+    open_kernel = np.ones((5, 5), np.uint8)
+    close_kernel = cv2.getStructuringElement(
+        cv2.MORPH_ELLIPSE,
+        (17, 17)
+    )
 
-    # 보정된 중심점
-    smooth_x = None
-    smooth_y = None
+    # 최소 검출 영역
+    min_area = 500
 
-    while True:
-        ret, frame = cap.read()
+    try:
+        while True:
+            # 4. 카메라 프레임 읽기
+            ret, frame = cap.read()
 
-        if not ret:
-            print("카메라 프레임을 읽을 수 없습니다.")
-            break
+            if not ret:
+                print("프레임을 읽을 수 없습니다.")
+                break
 
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            # 5. BGR -> HSV 변환
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        lower_blue = np.array([90, 80, 50])
-        upper_blue = np.array([135, 255, 255])
+            # 6. 파란색 영역 추출
+            mask = cv2.inRange(
+                hsv,
+                lower_blue,
+                upper_blue
+            )
 
-        mask = cv2.inRange(hsv, lower_blue, upper_blue)
+            # 7. 끊어진 영역 연결
+            mask = cv2.morphologyEx(
+                mask,
+                cv2.MORPH_CLOSE,
+                close_kernel
+            )
 
-        kernel = np.ones((5, 5), np.uint8)
-        mask = cv2.morphologyEx(
-            mask, cv2.MORPH_OPEN, kernel
-        )
+            # 8. 작은 노이즈 제거
+            mask = cv2.morphologyEx(
+                mask,
+                cv2.MORPH_OPEN,
+                open_kernel
+            )
 
-        contours, _ = cv2.findContours(
-            mask,
-            cv2.RETR_EXTERNAL,
-            cv2.CHAIN_APPROX_SIMPLE,
-        )
+            # 9. 윤곽선 검출
+            contours, _ = cv2.findContours(
+                mask,
+                cv2.RETR_EXTERNAL,
+                cv2.CHAIN_APPROX_SIMPLE
+            )
 
-        if contours:
-            largest = max(contours, key=cv2.contourArea)
-            area = cv2.contourArea(largest)
+            detected_count = 0
 
-            if area > 500:
-                x, y, w, h = cv2.boundingRect(largest)
+            # 10. 모든 윤곽선 확인
+            for contour in contours:
+                area = cv2.contourArea(contour)
+
+                # 너무 작은 영역 제외
+                if area < min_area:
+                    continue
+
+                x, y, w, h = cv2.boundingRect(contour)
 
                 center_x = x + w // 2
                 center_y = y + h // 2
 
-                # 중심점 위치를 부드럽게 보정
-                if smooth_x is None:
-                    smooth_x = center_x
-                    smooth_y = center_y
-                else:
-                    alpha = 0.3
-                    smooth_x = int(
-                        alpha * center_x + (1 - alpha) * smooth_x
-                    )
-                    smooth_y = int(
-                        alpha * center_y + (1 - alpha) * smooth_y
-                    )
+                detected_count += 1
 
-                trail.append((smooth_x, smooth_y))
-
+                # 경계 상자
                 cv2.rectangle(
-                    frame, (x, y), (x + w, y + h),
-                    (0, 255, 0), 2
+                    frame,
+                    (x, y),
+                    (x + w, y + h),
+                    (0, 255, 0),
+                    2
                 )
 
+                # 중심점
                 cv2.circle(
-                    frame, (smooth_x, smooth_y),
-                    6, (0, 0, 255), -1
+                    frame,
+                    (center_x, center_y),
+                    5,
+                    (0, 0, 255),
+                    -1
                 )
 
-                # 이동 경로 그리기
-                if len(trail) > 1:
-                    cv2.polylines(
-                        frame,
-                        [np.array(trail, dtype=np.int32)],
-                        False,
-                        (255, 0, 255),
-                        3,
-                    )
+                # 영역 크기
+                cv2.putText(
+                    frame,
+                    f"Area: {int(area)}",
+                    (x, max(y - 10, 20)),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5,
+                    (0, 255, 0),
+                    2
+                )
 
-                status = "Tracking"
-            else:
-                trail.clear()
-                smooth_x = None
-                smooth_y = None
-                status = "Searching"
-        else:
-            trail.clear()
-            smooth_x = None
-            smooth_y = None
-            status = "Searching"
+            # 11. 검출 개수 표시
+            cv2.putText(
+                frame,
+                f"Detected: {detected_count}",
+                (20, 40),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (255, 255, 255),
+                2
+            )
 
-        cv2.putText(
-            frame,
-            status,
-            (20, 40),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0, 255, 0) if status == "Tracking" else (0, 0, 255),
-            2,
-        )
+            # 12. 결과 출력
+            cv2.imshow("Object Detection", frame)
+            cv2.imshow("Color Detection", mask)
 
-        cv2.imshow("Object Tracking", frame)
-        cv2.imshow("Color Detection", mask)
+            key = cv2.waitKey(1) & 0xFF
 
-        key = cv2.waitKey(1) & 0xFF
+            if key == ord('q') or key == 27:
+                break
 
-        if key == ord("q") or key == 27:
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
