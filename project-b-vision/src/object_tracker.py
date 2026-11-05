@@ -24,7 +24,7 @@ def main():
     cv2.createTrackbar("V max", "Controls", 255, 255, nothing)
 
     # 물체 필터 설정
-    cv2.createTrackbar("Min Area", "Controls", 500, 10000, nothing)
+    cv2.createTrackbar("Min Area", "Controls", 3000, 10000, nothing)
 
     # Aspect Ratio는 0.1 단위로 조절
     cv2.createTrackbar("Min Ratio x10", "Controls", 1, 100, nothing)
